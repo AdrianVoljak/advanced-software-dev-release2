@@ -11,11 +11,17 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 LOG_DIR = ROOT / "logs" / "local-deploy"
 
+
 SERVICES = {
     "Multi-Agent": {
         "script": "ai-services/multi-agent-server/app.py",
         "port": 5013,
         "env": {"MULTI_AGENT_HOST": "0.0.0.0"},
+    },
+    "Agentic Loop": {
+        "script": "ai-services/agentic-loop/app.py",
+        "port": 5012,
+        "env": {},
     },
     "MCP": {
         "script": "ai-services/mcp-server/server.py",
@@ -28,6 +34,7 @@ SERVICES = {
         "env": {},
     },
 }
+
 
 processes = []
 log_files = []
@@ -132,6 +139,7 @@ def show_status():
     checks = [
         ("Ollama", 11434),
         ("Multi-Agent", 5013),
+        ("Agentic Loop", 5012),
         ("MCP", 8011),
         ("RAG", 8012),
         ("Assessment backend", 5007),
