@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -25,13 +26,9 @@
                 </div>
             </a>
 
-        <nav class="nav">
+            <nav class="nav">
                 <a class="nav__item nav__item--active" href="/home.html">HOME</a>
-                <a class="nav__item" href="/enrolment/">ENROLMENT</a>
                 <a class="nav__item" href="/assessments/">ASSESSMENTS</a>
-                <a class="nav__item" href="/calendar/">CALENDAR</a>
-                <a class="nav__item" href="/notes/">NOTES</a>
-                <a class="nav__item" href="/exams/">EXAMS</a>
                 <a class="nav__item" href="/multi-agent.html">MULTI-AGENT</a>
             </nav>
 
@@ -49,71 +46,45 @@
             <header class="page-header">
                 <div>
                     <h1 class="page-title" id="greeting">Student Portal</h1>
-                    <p class="page-subtitle" id="today-line">Everything for your studies in one place</p>
+                    <p class="page-subtitle" id="today-line">
+                        Everything for your studies in one place
+                    </p>
                 </div>
             </header>
 
             <section class="section">
                 <div class="section__head">
                     <h2 class="section__title">Your Features</h2>
-                    <span class="section__hint">Five services, one portal</span>
+                    <span class="section__hint">Two services, one portal</span>
                 </div>
 
                 <div class="section__body">
                     <div class="feature-grid">
 
-                        <a class="feature" href="/enrolment/">
-                            <span class="feature__code">01</span>
-                            <h3 class="feature__title">Enrolment</h3>
-                            <p class="feature__text">
-                                Browse the course catalogue, enrol in subjects, and manage
-                                what you are enrolled in.
-                            </p>
-                            <span class="feature__ai">AI course advisor</span>
-                            <span class="feature__status" data-service="enrolment">checking...</span>
-                        </a>
-
                         <a class="feature" href="/assessments/">
-                            <span class="feature__code">02</span>
+                            <span class="feature__code">01</span>
                             <h3 class="feature__title">Assessments</h3>
                             <p class="feature__text">
                                 Track assignments and due dates, and see what is outstanding
                                 across every subject.
                             </p>
                             <span class="feature__ai">AI priority ranking</span>
-                            <span class="feature__status" data-service="assessments">checking...</span>
+                            <span class="feature__status"
+                                  data-service="assessments">checking...</span>
                         </a>
 
-                        <a class="feature" href="/calendar/">
-                            <span class="feature__code">03</span>
-                            <h3 class="feature__title">Calendar</h3>
+                        <a class="feature" href="/multi-agent.html">
+                            <span class="feature__code">02</span>
+                            <h3 class="feature__title">Multi-Agent</h3>
                             <p class="feature__text">
-                                Add lectures, labs and deadlines, and drag events between days
-                                to reschedule them.
+                                Use Planner, Worker and Reviewer agents to complete
+                                assessment-related workflows with human oversight.
                             </p>
-                            <span class="feature__ai">AI study scheduling</span>
-                            <span class="feature__status" data-service="calendar">checking...</span>
-                        </a>
-
-                        <a class="feature" href="/notes/">
-                            <span class="feature__code">04</span>
-                            <h3 class="feature__title">Notes</h3>
-                            <p class="feature__text">
-                                Keep notebooks per subject, write notes, and search across
-                                everything you have written.
-                            </p>
-                            <span class="feature__ai">AI summaries</span>
-                            <span class="feature__status" data-service="notes">checking...</span>
-                        </a>
-
-                        <a class="feature" href="/exams/">
-                            <span class="feature__code">05</span>
-                            <h3 class="feature__title">Exams</h3>
-                            <p class="feature__text">
-                                See exam timetables and prepare for upcoming assessments.
-                            </p>
-                            <span class="feature__ai">AI exam support</span>
-                            <span class="feature__status" data-service="exams">checking...</span>
+                            <span class="feature__ai">
+                                Planner / Worker / Reviewer
+                            </span>
+                            <span class="feature__status"
+                                  data-service="multi-agent">checking...</span>
                         </a>
 
                     </div>
@@ -125,12 +96,15 @@
                 <section class="section">
                     <div class="section__head">
                         <h2 class="section__title">Service Status</h2>
-                        <span class="section__hint" id="status-summary">Checking...</span>
+                        <span class="section__hint" id="status-summary">
+                            Checking...
+                        </span>
                     </div>
+
                     <div class="section__body">
                         <p class="status-note">
-                            Each feature runs as its own set of containers. If one is down,
-                            the others keep working.
+                            Each feature operates independently. If one service is down,
+                            the other can continue working.
                         </p>
                         <ul class="status-list" id="status-list"></ul>
                     </div>
@@ -140,13 +114,27 @@
                     <div class="section__head">
                         <h2 class="section__title">Getting Started</h2>
                     </div>
+
                     <div class="section__body">
                         <ol class="steps">
-                            <li><strong>Enrol</strong> in your subjects from the Enrolment page.</li>
-                            <li><strong>Add your classes and deadlines</strong> to the Calendar.</li>
-                            <li><strong>Track assignments</strong> and mark them off as you go.</li>
-                            <li><strong>Write notes</strong> per subject and search them later.</li>
-                            <li><strong>Let the AI help</strong> — each feature has its own assistant.</li>
+                            <li>
+                                <strong>Sign in</strong> to your student account.
+                            </li>
+                            <li>
+                                <strong>View your assessments</strong> and upcoming deadlines.
+                            </li>
+                            <li>
+                                <strong>Create and manage assignments</strong>
+                                using the Assessment Tracker.
+                            </li>
+                            <li>
+                                <strong>Use AI assistance</strong> to prioritise
+                                assessments and retrieve relevant information.
+                            </li>
+                            <li>
+                                <strong>Explore Multi-Agent workflows</strong>
+                                using Planner, Worker and Reviewer agents.
+                            </li>
                         </ol>
                     </div>
                 </section>

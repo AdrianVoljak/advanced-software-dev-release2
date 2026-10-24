@@ -1,11 +1,8 @@
-const SERVICES = [
-    { key: "enrolment", label: "Enrolment", url: "/enrolment/" },
-    { key: "assessments", label: "Assessments", url: "/assessments/" },
-    { key: "calendar", label: "Calendar", url: "/calendar/" },
-    { key: "notes", label: "Notes", url: "/notes/" },
-    { key: "exams", label: "Exams", url: "/exams/" },
-];
 
+const SERVICES = [
+    { key: "assessments", label: "Assessments", url: "/assessments-api/assignments" },
+    { key: "multi-agent", label: "Multi-Agent", url: "/multi-agent-api/health" },
+];
 
 function readUser() {
     try {
@@ -73,8 +70,12 @@ async function isUp(url, timeoutMs = 3000) {
     const timer = setTimeout(() => controller.abort(), timeoutMs);
 
     try {
-        await fetch(url, { mode: "no-cors", signal: controller.signal });
-        return true;
+        const response = await fetch(url, {
+            cache: "no-store",
+            signal: controller.signal
+        });
+
+        return response.ok;
     } catch (error) {
         return false;
     } finally {
@@ -83,36 +84,69 @@ async function isUp(url, timeoutMs = 3000) {
 }
 
 function renderStatusRow(service, state) {
-    const dot = state === "up" ? "dot dot--up" : state === "down" ? "dot dot--down" : "dot";
-    const text = state === "up" ? "Running" : state === "down" ? "Not running" : "Checking";
+    const dot = state === "up"
+        ? "dot dot--up"
+        : state === "down"
+            ? "dot dot--down"
+            : "dot";
+
+    const text = state === "up"
+        ? "Running"
+        : state === "down"
+            ? "Not running"
+            : "Checking";
 
     return `
       <li>
-        <span class="status-name"><span class="${dot}"></span>${service.label}</span>
+        <span class="status-name">
+            <span class="${dot}"></span>${service.label}
+        </span>
         <span class="status-value">${text}</span>
       </li>`;
 }
 
 async function checkServices() {
     const list = document.getElementById("status-list");
-    list.innerHTML = SERVICES.map((s) => renderStatusRow(s, "checking")).join("");
-
-    const results = await Promise.all(SERVICES.map((s) => isUp(s.url)));
 
     list.innerHTML = SERVICES
-        .map((s, i) => renderStatusRow(s, results[i] ? "up" : "down"))
+        .map((service) => renderStatusRow(service, "checking"))
         .join("");
 
-    SERVICES.forEach((service, i) => {
-        const badge = document.querySelector(`.feature__status[data-service="${service.key}"]`);
+    const results = await Promise.all(
+        SERVICES.map((service) => isUp(service.url))
+    );
+
+    list.innerHTML = SERVICES
+        .map((service, index) =>
+            renderStatusRow(service, results[index] ? "up" : "down")
+        )
+        .join("");
+
+    SERVICES.forEach((service, index) => {
+        const badge = document.querySelector(
+            `.feature__status[data-service="${service.key}"]`
+        );
+
         if (!badge) return;
-        badge.textContent = results[i] ? "Running" : "Offline";
-        badge.classList.add(results[i] ? "feature__status--up" : "feature__status--down");
+
+        badge.textContent = results[index] ? "Running" : "Offline";
+
+        badge.classList.remove(
+            "feature__status--up",
+            "feature__status--down"
+        );
+
+        badge.classList.add(
+            results[index]
+                ? "feature__status--up"
+                : "feature__status--down"
+        );
     });
 
-    const up = results.filter(Boolean).length;
+    const running = results.filter(Boolean).length;
+
     document.getElementById("status-summary").textContent =
-        `${up} of ${SERVICES.length} running`;
+        `${running} of ${SERVICES.length} running`;
 }
 
 document.addEventListener("DOMContentLoaded", () => {

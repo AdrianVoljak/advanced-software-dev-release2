@@ -1,5 +1,6 @@
+
 services:
-  # Shared - login and register
+  # Shared - User Database
   user-database:
     build:
       context: ./shared/database
@@ -8,7 +9,7 @@ services:
       - user_database_data:/app/data
     restart: unless-stopped
 
-  #Shared - Authentication Backend
+  # Shared - Authentication Backend
   auth-backend:
     build:
       context: ./shared/backend
@@ -21,7 +22,7 @@ services:
       - "5011:5000"
     restart: unless-stopped
 
-  #Shared - Portal homepage
+  # Shared - Portal Frontend
   portal-frontend:
     build:
       context: ./shared/frontend
@@ -31,15 +32,10 @@ services:
       - "8000:80"
     depends_on:
       - auth-backend
-      - enrolment-frontend
       - assessment-frontend
-      - calendar-frontend
-      - notebook-frontend
-      - exam-frontend
     restart: unless-stopped
 
-  # Adrian Voljak - Assessment Tracker
-
+  # Adrian Voljak - Assessment Tracker Database
   assessment-database:
     build:
       context: ./student-adrianvoljak/database
@@ -48,7 +44,9 @@ services:
       DATABASE_PORT: 5008
     ports:
       - "5008:5008"
+    restart: unless-stopped
 
+  # Adrian Voljak - Assessment Tracker Backend
   assessment-backend:
     build:
       context: ./student-adrianvoljak
@@ -66,7 +64,9 @@ services:
       - assessment-database
     ports:
       - "5007:5007"
+    restart: unless-stopped
 
+  # Adrian Voljak - Assessment Tracker Frontend
   assessment-frontend:
     build:
       context: ./student-adrianvoljak/frontend
@@ -75,181 +75,7 @@ services:
       - assessment-backend
     expose:
       - "80"
-
-  # Voreak Sanith - Calendar
-
-  calendar-backend:
-    build:
-      context: ./student-voreaksanith
-      dockerfile: backend/Dockerfile
-    environment:
-      BACKEND_PORT: 5005
-      DATABASE_SERVICE_URL: http://calendar-database:5006
-      ENROLMENT_SERVICE_URL: http://enrolment-database:5002
-      OLLAMA_BASE_URL: http://host.docker.internal:11434
-      OLLAMA_MODEL: qwen2.5:0.5b
-      MCP_SERVER_URL: http://host.docker.internal:8011/mcp
-      RAG_SERVER_URL: http://host.docker.internal:8012
-      TZ: Australia/Sydney
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    depends_on:
-      - calendar-database
-      - enrolment-database
-    ports:
-      - "5005:5005"
-
-  calendar-database:
-    build:
-      context: ./student-voreaksanith/database
-      dockerfile: Dockerfile
-    environment:
-      DATABASE_PORT: 5006
-      TZ: Australia/Sydney
-    ports:
-      - "5006:5006"
-
-  calendar-frontend:
-    build:
-      context: ./student-voreaksanith/frontend
-      dockerfile: Dockerfile
-    depends_on:
-      - calendar-backend
-    expose:
-      - "80"
-
-  # Yulin Zhu - Enrolment
-
-  enrolment-frontend:
-    build:
-      context: ./student-yulinzhu/frontend
-      dockerfile: Dockerfile
-    depends_on:
-      - enrolment-backend
-    expose:
-      - "80"
     restart: unless-stopped
 
-  enrolment-backend:
-    build:
-      context: ./student-yulinzhu
-      dockerfile: backend/Dockerfile
-    environment:
-      DATABASE_SERVICE_URL: http://enrolment-database:5002
-      OLLAMA_BASE_URL: http://host.docker.internal:11434
-      OLLAMA_MODEL: qwen2.5:0.5b
-      MCP_SERVER_URL: http://host.docker.internal:8011/mcp
-      RAG_SERVER_URL: http://host.docker.internal:8012
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    depends_on:
-      - enrolment-database
-    ports:
-      - "5001:5001"
-    restart: unless-stopped
-    networks:
-      default:
-        aliases:
-          - enrolment-service
-
-  enrolment-database:
-    build:
-      context: ./student-yulinzhu/database
-      dockerfile: Dockerfile
-    volumes:
-      - enrolment_database_data:/app/data
-    ports:
-      - "5002:5002"
-    restart: unless-stopped
-    networks:
-      default:
-        aliases:
-          - database-service
-
-  # Yunchung Chang - Notebook
-
-  notebook-backend:
-    build:
-      context: ./student-yunchungchang
-      dockerfile: backend/Dockerfile
-    environment:
-      BACKEND_PORT: 5003
-      DATABASE_SERVICE_URL: http://notebook-database:5004
-      OLLAMA_BASE_URL: http://host.docker.internal:11434
-      OLLAMA_MODEL: qwen2.5:0.5b
-      MCP_SERVER_URL: http://host.docker.internal:8011/mcp
-      RAG_SERVER_URL: http://host.docker.internal:8012
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    depends_on:
-      - notebook-database
-    ports:
-      - "5003:5003"
-
-  notebook-database:
-    build:
-      context: ./student-yunchungchang/database
-      dockerfile: Dockerfile
-    environment:
-      DATABASE_PORT: 5004
-    volumes:
-      - notebook_data:/app/data
-    ports:
-      - "5004:5004"
-
-  notebook-frontend:
-    build:
-      context: ./student-yunchungchang/frontend
-      dockerfile: Dockerfile
-    depends_on:
-      - notebook-backend
-    expose:
-      - "80"
-
-      
-# Cayden Yip - Exam
-  exam-frontend:
-    build:
-      context: ./student-caydenyip/frontend
-    container_name: exam-frontend
-    expose:
-      - "80"
-    depends_on:
-      - exam-backend
-    restart: unless-stopped
-
-  exam-backend:
-        build:
-            context: ./student-caydenyip
-            dockerfile: backend/Dockerfile
-        container_name: exam-backend
-        ports:
-            - "5009:5009"
-        environment:
-            DATABASE_SERVICE_URL: http://exam-database:5010
-            ENROLMENT_DATABASE_URL: http://enrolment-database:5002
-            OLLAMA_BASE_URL: http://host.docker.internal:11434/v1
-            OLLAMA_MODEL: qwen2.5:0.5b
-            MCP_SERVER_URL: http://host.docker.internal:8011/mcp
-            RAG_SERVER_URL: http://host.docker.internal:8012
-        extra_hosts:
-            - "host.docker.internal:host-gateway"
-        depends_on:
-            - exam-database
-            - enrolment-database
-        restart: unless-stopped
-
-  exam-database:
-        build:
-            context: ./student-caydenyip/database
-        container_name: exam-database
-        ports:
-            - "5010:5010"
-        volumes:
-            - ./data:/app/data
-        restart: unless-stopped
 volumes:
-  enrolment_database_data:
-  notebook_data:
-  exam_data:
   user_database_data:
