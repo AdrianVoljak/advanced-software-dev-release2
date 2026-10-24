@@ -74,6 +74,9 @@ class RAGHandler(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    server = ThreadingHTTPServer(("0.0.0.0", 8012), RAGHandler)
+    server = ThreadingHTTPServer(
+    ("0.0.0.0", 8012),  # noqa: S104 - Required for local Docker-to-host connectivity
+    RAGHandler,
+    )
     print("Shared RAG server listening on port 8012", flush=True)
     server.serve_forever()

@@ -15,8 +15,8 @@ app.register_blueprint(rag_mode_bp)
 
 if __name__ == "__main__":
     app.run(
-        host="0.0.0.0",
+        host="0.0.0.0",  # noqa: S104 - Required for Docker networking
         port=int(getenv("BACKEND_PORT", 5007)),
-        debug=True,
+        debug=False,
         use_reloader=False
     )

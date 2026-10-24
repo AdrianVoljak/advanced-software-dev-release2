@@ -150,4 +150,8 @@ def review_deployment_endpoint():
 if __name__ == "__main__":
     thread = threading.Thread(target=polling_loop, daemon=True)
     thread.start()
-    app.run(host="0.0.0.0", port=5012)
+    app.run(
+    host="0.0.0.0",  # noqa: S104 - Required for local Docker-to-host connectivity
+    port=5012,
+    debug=False,
+    )

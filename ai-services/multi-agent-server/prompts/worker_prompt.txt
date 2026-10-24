@@ -27,6 +27,10 @@ EVIDENCE VALIDATION:
   supplied records.
 
 ASSESSMENT PRIORITISATION:
+- For upcoming assessment requests, exclude completed assessments
+  and assessments whose deadlines have already passed.
+- If no upcoming incomplete assessments remain, clearly state
+  that no qualifying assessments were found in the supplied evidence.
 - When comparing deadlines, the earliest due date is the most urgent.
 - Compare dates chronologically using YYYY-MM-DD.
 - Do not confuse earlier dates with later dates.

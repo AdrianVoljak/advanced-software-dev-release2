@@ -1,3 +1,6 @@
+
+"""GitHub Actions client for Adrian's Release 2 CI reviews."""
+
 import io
 import os
 import zipfile
@@ -9,8 +12,10 @@ GITHUB_API = "https://api.github.com"
 
 REPOSITORY = os.getenv(
     "GITHUB_REPOSITORY",
-    "owenz52/41026_ASD_Project"
+    "AdrianVoljak/advanced-software-dev-release2",
 )
+
+WORKFLOW_FILE = "student-adrianvoljak.yml"
 
 TOKEN = os.getenv("GITHUB_TOKEN")
 
@@ -28,7 +33,11 @@ def _headers():
 
 
 def get_completed_runs(limit=5):
-    url = f"{GITHUB_API}/repos/{REPOSITORY}/actions/runs"
+    """Retrieve completed runs of Adrian's workflow only."""
+    url = (
+        f"{GITHUB_API}/repos/{REPOSITORY}"
+        f"/actions/workflows/{WORKFLOW_FILE}/runs"
+    )
 
     response = requests.get(
         url,
@@ -46,6 +55,7 @@ def get_completed_runs(limit=5):
 
 
 def get_jobs(run_id):
+    """Retrieve jobs and individual step results for a CI run."""
     url = (
         f"{GITHUB_API}/repos/{REPOSITORY}"
         f"/actions/runs/{run_id}/jobs"
@@ -63,6 +73,7 @@ def get_jobs(run_id):
 
 
 def get_run_logs(run_id, max_chars=12000):
+    """Retrieve CI logs for troubleshooting failed runs."""
     url = (
         f"{GITHUB_API}/repos/{REPOSITORY}"
         f"/actions/runs/{run_id}/logs"
@@ -76,43 +87,44 @@ def get_run_logs(run_id, max_chars=12000):
 
     response.raise_for_status()
 
-    archive = zipfile.ZipFile(
-        io.BytesIO(response.content)
-    )
-
     log_parts = []
 
-    for filename in archive.namelist():
-        if not filename.endswith(".txt"):
-            continue
+    with zipfile.ZipFile(io.BytesIO(response.content)) as archive:
+        for filename in archive.namelist():
+            if not filename.endswith(".txt"):
+                continue
 
-        with archive.open(filename) as file:
-            text = file.read().decode(
-                "utf-8",
-                errors="replace"
+            with archive.open(filename) as file:
+                content = file.read().decode(
+                    "utf-8",
+                    errors="replace",
+                )
+
+            log_parts.append(
+                f"\n--- {filename} ---\n{content}"
             )
-
-        log_parts.append(
-            f"\n--- {filename} ---\n{text}"
-        )
 
     logs = "\n".join(log_parts)
 
     if len(logs) > max_chars:
+        half = max_chars // 2
         logs = (
-            logs[:6000]
+            logs[:half]
             + "\n\n[... log output truncated ...]\n\n"
-            + logs[-6000:]
+            + logs[-half:]
         )
 
     return logs
 
 
 def build_ci_evidence(run):
+    """Build a summary of GitHub Actions results for AI review."""
     jobs = get_jobs(run["id"])
 
     lines = [
+        f"Repository: {REPOSITORY}",
         f"Workflow: {run.get('name')}",
+        f"Workflow File: {WORKFLOW_FILE}",
         f"Run ID: {run.get('id')}",
         f"Branch: {run.get('head_branch')}",
         f"Commit: {run.get('head_sha')}",
@@ -146,19 +158,20 @@ def build_ci_evidence(run):
                     logs,
                 ])
 
-        except requests.HTTPError as error:
+        except (requests.RequestException, zipfile.BadZipFile) as error:
             lines.extend([
                 "",
                 "Failure Logs:",
-                f"Unable to retrieve logs: {error}",
+                f"Unable to retrieve logs: {type(error).__name__}",
             ])
 
     else:
         lines.extend([
             "",
             "CI Summary:",
-            "The workflow completed successfully. "
-            "Raw logs were not included because no failed CI stage requires diagnosis.",
+            "The workflow completed successfully.",
+            "Job and step conclusions are listed above.",
+            "Raw logs were not retrieved for this successful run.",
         ])
 
     return "\n".join(lines)

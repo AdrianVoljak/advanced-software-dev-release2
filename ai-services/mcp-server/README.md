@@ -1,62 +1,76 @@
-# Shared MCP Server
+# Assessment Tracker MCP Server
 
-Exposes the project's data to every feature as a set of named tools, so one
-feature can reach another feature's information through a single interface.
+This server provides Model Context Protocol (MCP) tools
+for the ASD Student Portal.
 
-Release 1 requires this server to run locally and **not** be containerised, so
-it is started directly with Python and is deliberately absent from
-`docker-compose.yml`.
+The reduced Release 2 implementation focuses exclusively
+on the Assessment Tracker microservice.
 
-## Running it
+## Implementation
 
-```bash
-pip install -r requirements.txt
-python app.py
+- Framework: MCP Python SDK
+- Transport: Streamable HTTP
+- Port: 8011
+- Endpoint: http://localhost:8011/mcp
+- Execution: Local Python process (not Dockerised)
+
+## Available Tools
+
+### assessments_get_upcoming
+
+Returns incomplete assessments for a student that are due
+within a specified number of days.
+
+Arguments:
+
+- student_id: Required integer
+- days_ahead: Optional integer (1-90), defaults to 14
+
+Returns:
+
+- status
+- as_of
+- assignments
+
+Each assignment includes:
+
+- assignment_id
+- title
+- course_id
+- due_date
+- weighting
+- status
+
+## Starting the Server
+
+From the project root:
+
+```powershell
+python -m pip install -r ai-services/mcp-server/requirements.txt
+python ai-services/mcp-server/server.py
 ```
 
-It listens on port 5100. Start it before the features that use it; the rest of
-the application runs normally without it, reporting MCP as unavailable.
+The server starts on port 8011.
 
-## Tools
+## Integration
 
-| Tool | Arguments | Returns |
-|---|---|---|
-| `list_calendar_events` | `student_id`, optional `start_date`, `end_date`, `subject` | A student's calendar events |
-| `list_assignments` | `student_id`, optional `status` | Assignments with due dates and weightings |
-| `list_exams` | optional `student_id` | Exam timetable entries |
-| `list_courses` | none | The course catalogue |
-| `list_enrolments` | optional `student_id` | Enrolment records |
-| `search_notes` | `query` | Notes matching a phrase |
-| `student_overview` | `student_id` | Events, assignments, exams and enrolments together |
+The Assessment Tracker backend connects through:
 
-## Endpoints
+http://host.docker.internal:8011/mcp
 
-| Method | Path | Purpose |
-|---|---|---|
-| GET | `/health` | Liveness and tool count |
-| GET | `/tools` | The registered tools and their input schemas |
-| POST | `/invoke` | `{"tool": name, "arguments": {...}}` |
+The MCP tool queries the Assessment Tracker backend,
+which retrieves assignment data from its database service.
 
 ## Configuration
 
-The server reads the feature database services on the ports Docker Compose
-publishes to the host. Each is overridable, which is how the tests point it at
-stubs.
+ASSESSMENT_BACKEND_URL
 
-| Variable | Default |
-|---|---|
-| `MCP_PORT` | 5100 |
-| `ENROLMENT_DB_URL` | http://localhost:5002 |
-| `NOTEBOOK_DB_URL` | http://localhost:5004 |
-| `CALENDAR_DB_URL` | http://localhost:5006 |
-| `ASSESSMENT_DB_URL` | http://localhost:5008 |
-| `EXAM_DB_URL` | http://localhost:5010 |
-| `MCP_UPSTREAM_TIMEOUT` | 10 |
+Default: http://127.0.0.1:5007
 
-## Failure behaviour
+## Security
 
-A tool never raises out of the server. If a feature database service is
-unavailable the tool returns an error with HTTP 502 and the server keeps
-serving every other tool. `student_overview` goes further: it gathers each
-source independently and reports which ones were unavailable, so a stopped
-container reduces the overview rather than failing it.
+- Read-only assessment retrieval
+- Student ID validation
+- Date-range validation
+- HTTP request timeout
+- No direct database modification

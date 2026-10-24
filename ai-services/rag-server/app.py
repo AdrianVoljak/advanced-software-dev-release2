@@ -207,4 +207,8 @@ if __name__ == "__main__":
         print(f"    {name}: {count}")
     for missing in report["unavailable"]:
         print(f"    unavailable: {missing['source']} ({missing['reason']})")
-    app.run(host="0.0.0.0", port=PORT)
+    app.run(
+        host="0.0.0.0",  # noqa: S104 - Required for access from Docker containers
+        port=PORT,
+        debug=False,
+    )

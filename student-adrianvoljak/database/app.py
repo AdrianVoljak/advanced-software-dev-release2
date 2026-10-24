@@ -413,8 +413,8 @@ def update_assignment_status(assignment_id):
 
 if __name__ == "__main__":
     app.run(
-        host="0.0.0.0",
+        host="0.0.0.0",  # noqa: S104 - Required for Docker networking
         port=int(getenv("DATABASE_PORT", 5008)),
-        debug=True,
+        debug=False,
         use_reloader=False
     )

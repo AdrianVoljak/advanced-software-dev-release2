@@ -58,10 +58,26 @@ def is_prioritisation_request(user_request):
     return any(keyword in request for keyword in keywords)
 
 
-def prioritise_assignments(assignments):
+def is_upcoming_request(user_request):
+    """Identify requests specifically concerning upcoming assessments."""
+    request = user_request.lower()
+
+    keywords = (
+        "upcoming",
+        "urgent",
+        "next assessment",
+        "due next",
+        "due soon",
+    )
+
+    return any(keyword in request for keyword in keywords)
+
+
+def prioritise_assignments(assignments, upcoming_only=False):
     """Sort supplied assignments chronologically without using an LLM."""
     valid = []
     missing_dates = []
+    today = date.today()
 
     for assignment in assignments:
         if not isinstance(assignment, dict):
@@ -70,6 +86,10 @@ def prioritise_assignments(assignments):
 
         title = assignment.get("title", "Untitled assignment")
         due_date = assignment.get("due_date")
+        status = str(assignment.get("status", "")).strip().lower()
+
+        if upcoming_only and status == "completed":
+            continue
 
         try:
             parsed_date = date.fromisoformat(due_date)
@@ -77,19 +97,39 @@ def prioritise_assignments(assignments):
             missing_dates.append(str(title))
             continue
 
+        if upcoming_only and parsed_date < today:
+            continue
+
         valid.append((parsed_date, assignment))
 
     valid.sort(key=lambda item: item[0])
 
     if not valid:
+        if upcoming_only:
+            message = (
+                "No upcoming incomplete assessments with valid "
+                "due dates were found in the supplied evidence."
+            )
+        else:
+            message = (
+                "Cannot prioritise assessments because no valid "
+                "due dates were provided."
+            )
+
+        limitations = (
+            "Records with missing or invalid due dates: "
+            + ", ".join(missing_dates)
+            if missing_dates
+            else "Only the supplied assessment records were considered."
+        )
+
         return (
             "Output:\n"
-            "Cannot prioritise assessments because no valid "
-            "due dates were provided.\n\n"
+            f"{message}\n\n"
             "Evidence Used:\n"
-            "No valid assessment deadlines.\n\n"
+            "Supplied assignment records.\n\n"
             "Limitations:\n"
-            "Valid due dates in YYYY-MM-DD format are required."
+            f"{limitations}"
         )
 
     earliest_date = valid[0][0]
@@ -99,17 +139,17 @@ def prioritise_assignments(assignments):
         "Assessment deadline priority (earliest first):",
     ]
 
-    for index, (due_date, assignment) in enumerate(valid, start=1):
+    for index, (parsed_date, assignment) in enumerate(valid, start=1):
         title = assignment.get("title", "Untitled assignment")
 
         lines.append(
-            f"{index}. {title} — {due_date.isoformat()}"
+            f"{index}. {title} — {parsed_date.isoformat()}"
         )
 
     most_urgent = [
         assignment.get("title", "Untitled assignment")
-        for due_date, assignment in valid
-        if due_date == earliest_date
+        for parsed_date, assignment in valid
+        if parsed_date == earliest_date
     ]
 
     lines.extend([
@@ -119,7 +159,7 @@ def prioritise_assignments(assignments):
         f"Due on {earliest_date.isoformat()}.",
         "",
         "Evidence Used:",
-        "Supplied assignment titles and due_date fields.",
+        "Supplied assignment titles, due_date fields and statuses.",
         "",
         "Limitations:",
     ])
@@ -135,6 +175,12 @@ def prioritise_assignments(assignments):
             "other workload factors were not provided."
         )
 
+    if upcoming_only:
+        lines.append(
+            "Completed and overdue assessments were excluded "
+            "from the upcoming deadline ranking."
+        )
+
     return "\n".join(lines)
 
 
@@ -144,6 +190,9 @@ def execute_workflow(user_request, planner_result, evidence):
     Does not modify application data.
     """
 
+    if not isinstance(user_request, str) or not user_request.strip():
+        raise ValueError("User request must be a non-empty string")
+
     if not isinstance(evidence, (dict, list)):
         raise ValueError("Evidence must be a dictionary or list")
 
@@ -152,14 +201,16 @@ def execute_workflow(user_request, planner_result, evidence):
 
     plan = planner_result.get("plan", "")
 
-    if not plan:
-        raise ValueError("Planner result does not contain a plan")
+    if not isinstance(plan, str) or not plan.strip():
+        raise ValueError("Planner result does not contain a valid plan")
 
     assignments = get_assignments(evidence)
+    prioritisation_request = is_prioritisation_request(user_request)
 
     evidence_is_empty = (
         not evidence
         or assignments == []
+        or (assignments is None and prioritisation_request)
     )
 
     if evidence_is_empty:
@@ -181,12 +232,15 @@ def execute_workflow(user_request, planner_result, evidence):
             "human_approval_required": True,
         }
 
-    if assignments is not None and is_prioritisation_request(user_request):
+    if assignments is not None and prioritisation_request:
         return {
             "status": "success",
             "agent": "worker_agent",
             "model": None,
-            "output": prioritise_assignments(assignments),
+            "output": prioritise_assignments(
+                assignments,
+                upcoming_only=is_upcoming_request(user_request),
+            ),
             "evidence_count": len(assignments),
             "human_approval_required": True,
         }
@@ -243,13 +297,13 @@ if __name__ == "__main__":
             {
                 "id": 1,
                 "title": "Architecture Report",
-                "due_date": "2026-10-23",
+                "due_date": "2026-10-27",
                 "status": "incomplete",
             },
             {
                 "id": 2,
                 "title": "Cloud Deployment",
-                "due_date": "2026-10-28",
+                "due_date": "2026-11-05",
                 "status": "incomplete",
             },
         ]

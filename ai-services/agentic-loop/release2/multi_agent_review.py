@@ -1,4 +1,11 @@
 
+"""Release 2 Multi-Agent workflow review.
+
+Validates workflow coordination using saved history and audit events.
+Sends concise evidence to the AI reviewer while preserving full
+source evidence in the saved report.
+"""
+
 import json
 import os
 from pathlib import Path
@@ -20,8 +27,7 @@ AUDIT_FILE = MULTI_AGENT_LOG_DIR / "coordination_audit.jsonl"
 
 
 def load_jsonl(path):
-    """Read JSONL evidence from an existing log file."""
-
+    """Read existing JSONL evidence records."""
     if not path.is_file():
         raise FileNotFoundError(f"Evidence file not found: {path}")
 
@@ -43,8 +49,7 @@ def load_jsonl(path):
 
 
 def collect_workflow_evidence(workflow_id):
-    """Retrieve the latest workflow state and its audit events."""
-
+    """Retrieve the latest workflow state and associated audit events."""
     if not isinstance(workflow_id, str) or not workflow_id.strip():
         raise ValueError("workflow_id is required")
 
@@ -75,8 +80,7 @@ def collect_workflow_evidence(workflow_id):
 
 
 def validate_workflow_evidence(evidence):
-    """Perform deterministic validation of workflow coordination."""
-
+    """Deterministically validate agent and human-review coordination."""
     workflow = evidence["workflow"]
     events = evidence["audit_events"]
 
@@ -138,37 +142,86 @@ def validate_workflow_evidence(evidence):
     }
 
 
+def summarise_workflow_evidence(evidence, validation):
+    """Create concise evidence for the AI without inventing findings."""
+    workflow = evidence["workflow"]
+
+    planner = workflow.get("planner") or {}
+    worker = workflow.get("worker") or {}
+    reviewer = workflow.get("reviewer") or {}
+    human_review = workflow.get("human_review") or {}
+
+    # Restrict verbose generated text, not deterministic check results.
+    return {
+        "workflow_id": workflow.get("workflow_id"),
+        "request": workflow.get("request"),
+        "workflow_status": workflow.get("status"),
+        "planner": {
+            "present": bool(planner),
+            "status": planner.get("status"),
+            "objective": planner.get("objective"),
+            "plan_excerpt": str(planner.get("plan", ""))[:900],
+        },
+        "worker": {
+            "present": bool(worker),
+            "status": worker.get("status"),
+            "evidence_count": worker.get("evidence_count"),
+            "output_excerpt": str(worker.get("output", ""))[:1200],
+        },
+        "reviewer": {
+            "present": bool(reviewer),
+            "status": reviewer.get("status"),
+            "review_excerpt": str(reviewer.get("review", ""))[:1200],
+        },
+        "human_review": {
+            "decision": human_review.get("decision"),
+            "comments": human_review.get("comments"),
+            "reviewed_at": human_review.get("reviewed_at"),
+        },
+        "audit_events": [
+            event.get("event")
+            for event in evidence["audit_events"]
+        ],
+        "validation": validation,
+        "limitations": (
+            "Agent outputs are excerpts. Deterministic coordination "
+            "checks are based on the original stored records. "
+            "The AI review cannot independently verify omitted content."
+        ),
+    }
+
+
 def review_multi_agent_workflow(workflow_id):
+    """Validate and review a saved Multi-Agent workflow."""
     evidence = collect_workflow_evidence(workflow_id)
 
     validation = validate_workflow_evidence(evidence)
 
-    evidence["validation"] = validation
+    summary = summarise_workflow_evidence(evidence, validation)
 
     instructions = """
-Review the Planner, Worker, Reviewer and Human Review workflow.
+Review the Multi-Agent workflow using the supplied summary.
 
-Check:
-- Whether all required agents executed.
-- Whether workflow events occurred in the correct order.
-- Whether the Reviewer identified unsupported claims.
-- Whether the human decision is recorded.
-- Whether the final status matches the human decision.
-- Whether any evidence is missing or contradictory.
+Evaluate:
+- Planner, Worker and Reviewer execution.
+- Recorded audit event ordering.
+- Presence and validity of the human review.
+- Consistency between final status and human decision.
+- Risks or limitations visible in the supplied excerpts.
 
-Distinguish between:
-1. Workflow execution correctness.
-2. Quality and accuracy of the generated agent outputs.
+The deterministic validation results are based on the stored
+workflow history and audit events.
 
-A technically complete workflow can still have incorrect AI output.
-Do not treat workflow completion as proof of factual accuracy.
+Do not claim the full agent outputs were independently checked.
+Do not claim factual accuracy solely because workflow validation passed.
 
-Use the deterministic validation results as evidence.
+Keep each PLAN, ACT, OBSERVE and ADAPT section short.
 """
 
+    # The AI receives compact evidence to reduce output problems.
     result = execute_review(
         mode="multi_agent",
-        evidence=evidence,
+        evidence=summary,
         instructions=instructions,
     )
 

@@ -1,26 +1,50 @@
-
 repos:
   - repo: local
     hooks:
-      # Shared Release 2 - Ruff
+
+      # SHARED RELEASE 2 - RUFF SECURITY
       - id: ruff-release2
-        name: Ruff - Shared Release 2
+        name: Ruff - Shared Release 2 Security
         entry: ruff check
         language: system
         types: [python]
-        files: ^ai-services/(multi-agent-server/|shared_llm/|agentic-loop/release2/)
+        files: ^ai-services/
 
-      # Shared Release 2 - Secret scanning
+      # INDIVIDUAL - RUFF SECURITY
+      - id: ruff-adrian
+        name: Ruff - Adrian Assessment Tracker
+        entry: ruff check --select S
+        language: system
+        types: [python]
+        files: ^student-adrianvoljak/
+
+      # SHARED + INDIVIDUAL - SECRET SCANNING
       - id: detect-secrets
-        name: Detect Secrets
+        name: Detect Secrets - Release 2
         entry: detect-secrets-hook --baseline .secrets.baseline
         language: system
         types: [text]
 
-      # Shared Release 2 - Dependency auditing
+      # SHARED RELEASE 2 - DEPENDENCY AUDIT
       - id: pip-audit-shared
         name: pip-audit - Shared Requirements
         entry: python scripts/audit_shared_dependencies.py
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      # INDIVIDUAL - BACKEND DEPENDENCY AUDIT
+      - id: pip-audit-adrian-backend
+        name: pip-audit - Adrian Backend
+        entry: pip-audit -r student-adrianvoljak/backend/requirements.txt
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      # INDIVIDUAL - DATABASE DEPENDENCY AUDIT
+      - id: pip-audit-adrian-database
+        name: pip-audit - Adrian Database
+        entry: pip-audit -r student-adrianvoljak/database/requirements.txt
         language: system
         pass_filenames: false
         always_run: true

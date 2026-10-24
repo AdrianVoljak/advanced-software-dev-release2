@@ -22,6 +22,14 @@ Check:
 For assessment deadlines:
 - An earlier due date is more urgent than a later due date.
 - Do not accept claims that due dates are missing when they appear in evidence.
+- For upcoming assessment requests, verify that completed and
+  overdue assessments have been excluded.
+- For general historical deadline requests, do not require
+  completed or overdue assessments to be excluded.
+- If no qualifying upcoming assessments remain, verify that
+  the Worker explains this without inventing records.
+- Treat deadline urgency as a ranking based on due dates only,
+  unless additional urgency factors were supplied.
 
 Return exactly these sections:
 
