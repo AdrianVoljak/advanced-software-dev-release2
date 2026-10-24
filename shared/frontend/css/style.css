@@ -1,7 +1,4 @@
-/* Study Notebook — shares the visual language of the calendar module:
-   Swiss-style red/black, square corners, hairline rules, uppercase labels.
-   Tokens are kept identical to student-voreaksanith/frontend/css/calendar.css
-   so the two modules can eventually move into shared/frontend/. */
+/* Shared portal styling and design tokens. */
 
 :root {
   --red: #E5361F;
