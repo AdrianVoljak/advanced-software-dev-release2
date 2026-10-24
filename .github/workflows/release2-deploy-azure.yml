@@ -1,0 +1,59 @@
+name: Release 2 - Azure Deployment
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: release2-azure-deployment
+  cancel-in-progress: false
+
+jobs:
+  build-deploy-test:
+    name: Build, Deploy and Verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify Docker configuration
+        run: docker compose config --quiet
+
+      - name: Azure login using OIDC
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Verify existing Azure environment
+        run: bash scripts/release2-deployment/deploy-azure-env.sh
+
+      - name: Build and push six Docker images
+        run: bash scripts/release2-deployment/build-images.sh
+
+      - name: Deploy six Azure Container Apps
+        run: bash scripts/release2-deployment/deploy-azure.sh
+
+      - name: Test Azure deployment
+        run: bash scripts/release2-deployment/deployment-testing.sh
+
+      - name: Record deployment summary
+        if: always()
+        run: |
+          {
+            echo "## Release 2 Azure Deployment"
+            echo ""
+            echo "**Commit:** \`${GITHUB_SHA}\`"
+            echo "**Resource group:** asd-release2-rg"
+            echo "**Container Apps:** 6"
+            echo ""
+            echo "**Portal:** https://portal-frontend.lemoncoast-c2c743f8.australiaeast.azurecontainerapps.io"
+            echo ""
+            echo "**Job result:** ${{ job.status }}"
+          } >> "$GITHUB_STEP_SUMMARY"
