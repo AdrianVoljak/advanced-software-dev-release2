@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Course Enrolment | ASD Student Portal</title>
+    <link
+        rel="stylesheet"
+        href="css/asd-shell.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="css/styles.css"
+    >
+</head>
+
+
+<body>
+
+<div class="layout">
+    <aside class="sidebar">
+
+        <div class="brand">
+
+            <div class="brand__mark"></div>
+
+            <div>
+                <div class="brand__name">
+                    ASD STUDENT PORTAL
+                </div>
+
+                <div class="brand__sub">
+                    41026
+                </div>
+            </div>
+
+        </div>
+
+        <nav class="nav">
+
+            <!-- HOME -->
+            <a
+                href="/home.html"
+                class="nav__item"
+            >
+                HOME
+            </a>
+
+            <!-- ENROLMENT -->
+            <a
+                href="/enrolment/"
+                class="nav__item nav__item--active"
+                onclick="return false;"
+            >
+                ENROLMENT
+            </a>
+
+            <!-- ASSIGNMENTS -->
+            <a
+                href="/assessments/"
+                class="nav__item"
+                onclick="openCalendar(); return false;"
+            >
+                ASSESSMENTS
+            </a>
+
+            <!-- CALENDAR -->
+            <a
+                href="/calendar/"
+                class="nav__item"
+                onclick="openAssignment();return false;"
+            >
+                CALENDAR
+            </a>
+
+            <!-- NOTES -->
+            <a
+                href="/notes/"
+                class="nav__item"
+                onclick="openNotebook(); return false;"
+            >
+                NOTES
+            </a>
+
+            <!-- EXAM -->
+            <a
+                href="/exams/"
+                class="nav__item"
+                onclick="openExam(); return false;"
+            >
+                EXAMS
+            </a>
+        </nav>
+
+        <div class="side-note">
+
+            <div class="side-note__label">
+                COURSE ENROLMENT
+            </div>
+
+            <div class="side-note__text">
+                Browse available courses, manage your enrolments
+                and receive AI-assisted course recommendations.
+            </div>
+
+        </div>
+
+    </aside>
+
+    <main class="main">
+        <header class="page-header">
+
+            <div>
+
+                <h1 class="page-title">
+                    Course Enrolment
+                </h1>
+
+                <p class="page-subtitle">
+                    Browse courses and manage your current enrolments.
+                </p>
+
+            </div>
+
+            <a
+                href="/home.html"
+                class="btn"
+            >
+                BACK TO HOME
+            </a>
+
+        </header>
+        <section class="section">
+
+            <div class="section__head">
+
+                <div class="section__title">
+                    Course Catalogue
+                </div>
+
+                <div class="section__hint">
+                    Select an available course to enrol
+                </div>
+
+            </div>
+
+
+            <div class="section__body">
+                <div
+                    id="courses-list"
+                    class="card-grid"
+                >
+
+                    <div class="empty">
+                        Loading courses...
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+        <section class="section">
+
+            <div class="section__head">
+
+                <div class="section__title">
+                    My Enrolments
+                </div>
+
+                <div class="section__hint">
+                    View, edit or withdraw from your courses
+                </div>
+
+            </div>
+
+
+            <div class="section__body">
+                <div
+                    id="enrolments-list"
+                    class="enrolment-list"
+                >
+
+                    <div class="empty">
+                        Loading enrolments...
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+        <section class="section">
+
+            <div class="section__head">
+
+                <div class="section__title">
+                    AI Enrolment Assistant
+                </div>
+
+                <div class="section__hint">
+                    Agentic AI course support
+                </div>
+
+            </div>
+
+
+            <div class="ai-block">
+
+                <div class="ai-block__label">
+                    AI COURSE ASSISTANT
+                </div>
+
+
+                <div class="ai-block__text">
+
+                    Ask for course recommendations or help choosing
+                    a course based on your interests.
+
+                </div>
+
+
+                <div
+                    class="ai-input-row"
+                    style="margin-top: 14px;"
+                >
+
+                    <input
+                        id="ai-input"
+                        class="input"
+                        type="text"
+                        placeholder="e.g. I am interested in software development"
+                    >
+
+                    <button
+                        class="btn btn--primary"
+                        onclick="askAI()"
+                    >
+                        ASK AI
+                    </button>
+
+                </div>
+
+
+                <div
+                    id="ai-response"
+                    class="ai-response"
+                ></div>
+
+            </div>
+
+        </section>
+
+        <section class="section">
+
+            <div class="section__head">
+
+                <div class="section__title">
+                    MCP Course Lookup
+                </div>
+
+                <div class="section__hint">
+                    Browse available courses
+                </div>
+
+            </div>
+
+            <div class="section__body">
+                <button
+                    id="mcp-courses-button"
+                    type="button"
+                    class="btn btn--primary"
+                    onclick="loadMcpCourses()"
+                >
+                    LOAD MCP COURSES
+                </button>
+
+                <p
+                    id="mcp-status"
+                    role="status"
+                    aria-live="polite"
+                ></p>
+
+                <div
+                    id="mcp-courses-list"
+                    class="card-grid"
+                ></div>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="section__head">
+                <div class="section__title">
+                    RAG Course Assistant
+                </div>
+                <div class="section__hint">
+                    Answers based on course information
+                </div>
+            </div>
+
+            <div class="section__body">
+                <p>
+                    Ask about course descriptions and availability.
+                    Personal enrolment records are not included.
+                </p>
+
+                <form id="rag-form" onsubmit="askRag(event)">
+                    <label for="rag-input">Your question</label>
+
+                    <div class="ai-input-row">
+                        <input
+                            id="rag-input"
+                            class="input"
+                            type="text"
+                            maxlength="1000"
+                            placeholder="What is course 41026 about?"
+                            required
+                        >
+
+                        <button
+                            id="rag-button"
+                            type="submit"
+                            class="btn btn--primary"
+                        >
+                            ASK RAG
+                        </button>
+                    </div>
+                </form>
+
+                <p id="rag-status" role="status" aria-live="polite"></p>
+
+                <div id="rag-result" hidden>
+                    <h3>Answer</h3>
+                    <p id="rag-answer" style="white-space: pre-wrap;"></p>
+
+                    <p>
+                        <strong>Confidence:</strong>
+                        <span id="rag-confidence"></span>
+                    </p>
+
+                    <ul id="rag-citations" hidden></ul>
+
+                    <div id="rag-source-details" hidden>
+                        <h3>Source information</h3>
+                        <div id="rag-sources"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+</div>
+
+<script src="js/app.js"></script>
+</body>
+
+</html>

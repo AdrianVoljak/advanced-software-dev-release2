@@ -1,0 +1,67 @@
+# Python virtual environments
+.venv/
+venv/
+env/
+
+# Python cache / compiled files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# SQLite / local databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Test / tooling cache
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Logs
+*.log
+
+# Build artefacts
+build/
+dist/
+*.egg-info/
+
+# Frontend dependencies if introduced
+node_modules/
+
+# IDE / editor
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary / backup files
+*.tmp
+*.temp
+*.bak
+*~
+
+# Docker local override files
+docker-compose.override.yml
+
+#Other
+ai-services/agentic-loop/data/
+ai-services/agentic-loop/reports/*.md
+
+# Ruff generated cache
+.ruff_cache/
+
+# Multi-Agent generated workflow logs
+ai-services/multi-agent-server/logs/*.jsonl
+
+# Release 2 generated review reports
+ai-services/agentic-loop/reports/release2/*.md

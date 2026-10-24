@@ -1,0 +1,131 @@
+name: Voreaksanith Calendar CI
+
+on:
+  push:
+    paths:
+      - "student-voreaksanith/**"
+      - ".github/workflows/student-voreaksanith.yml"
+  pull_request:
+    paths:
+      - "student-voreaksanith/**"
+      - ".github/workflows/student-voreaksanith.yml"
+
+# The shared MCP and RAG servers are not containerised and are not running
+# in CI, so the integration is compiled and its tests run against the real
+# servers started by the test itself, never against a live shared server.
+env:
+  MCP_ENABLED: "0"
+  RAG_ENABLED: "0"
+
+jobs:
+  build-and-validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install backend dependencies
+        run: |
+          pip install -r student-voreaksanith/backend/requirements.txt
+
+      - name: Install database dependencies
+        run: |
+          pip install -r student-voreaksanith/database/requirements.txt
+
+      # The Release 1 integration test starts the team's real shared MCP and
+      # RAG servers in-process, so their dependencies are needed here. The
+      # servers are never reached over the network during CI.
+      - name: Install shared MCP and RAG server dependencies
+        run: |
+          pip install -r ai-services/mcp-server/requirements.txt
+          pip install -r ai-services/rag-server/requirements.txt
+
+      - name: Initialise calendar database
+        run: |
+          python student-voreaksanith/database/init_db.py
+
+      - name: Validate backend Python
+        run: |
+          python -m py_compile student-voreaksanith/backend/app.py
+          python -m py_compile student-voreaksanith/backend/config.py
+          python -m py_compile student-voreaksanith/backend/routes/calendar_routes.py
+          python -m py_compile student-voreaksanith/backend/routes/ai_mode.py
+          python -m py_compile student-voreaksanith/backend/services/calendar_service.py
+          python -m py_compile student-voreaksanith/backend/services/database_api.py
+          python -m py_compile student-voreaksanith/backend/services/deadline_sources.py
+          python -m py_compile student-voreaksanith/backend/services/deadline_service.py
+          python -m py_compile student-voreaksanith/backend/services/schedule_agent.py
+          python -m py_compile student-voreaksanith/backend/services/rag_documents.py
+          python -m py_compile student-voreaksanith/backend/services/rag_client.py
+          python -m py_compile student-voreaksanith/backend/services/mcp_client.py
+          python -m py_compile student-voreaksanith/backend/services/mcp_policy.py
+          python -m py_compile student-voreaksanith/backend/services/llm_client.py
+          python -m py_compile student-voreaksanith/backend/services/prompt_loader.py
+
+      - name: Validate database Python
+        run: |
+          python -m py_compile student-voreaksanith/database/app.py
+          python -m py_compile student-voreaksanith/database/init_db.py
+
+      # The AI features load their prompts from disk at runtime. A missing file
+      # only shows up when a student clicks the button, so it is checked here.
+      - name: Check AI prompt files are present
+        run: |
+          cd student-voreaksanith
+          for f in system_prompt context_prompt suggest_task_prompt \
+                   suggest_retry_prompt briefing_task_prompt; do
+            test -f "prompts/service/implementation/$f.txt" \
+              || { echo "Missing prompt: $f.txt"; exit 1; }
+          done
+          echo "All prompt files present"
+
+      - name: Validate frontend JavaScript
+        run: |
+          node --check student-voreaksanith/frontend/js/calendar.js
+
+      # Runs the whole feature: adds, deletes and moves events, imports
+      # deadlines from stub assessment and exam services, and checks the
+      # behaviour when those services and Ollama are unreachable.
+      - name: Run calendar test suite
+        run: |
+          python student-voreaksanith/tests/test_calendar_features.py
+          # The shared MCP and RAG servers are started by the test itself,
+          # so this does not depend on them running in CI.
+          MCP_ENABLED=1 RAG_ENABLED=1 python student-voreaksanith/tests/test_shared_mcp_rag.py
+
+      - name: Build backend Docker image
+        run: |
+          docker build \
+            -f student-voreaksanith/backend/Dockerfile \
+            student-voreaksanith
+
+      - name: Build database Docker image
+        run: |
+          docker build \
+            -f student-voreaksanith/database/Dockerfile \
+            student-voreaksanith/database
+
+      - name: Build frontend Docker image
+        run: |
+          docker build \
+            -f student-voreaksanith/frontend/Dockerfile \
+            student-voreaksanith/frontend
+
+      # Catches the failure mode where the backend image builds but the prompts
+      # folder was not copied into it, which breaks every AI feature at runtime.
+      - name: Verify prompts exist inside the backend image
+        run: |
+          docker build -q -t calendar-backend-ci \
+            -f student-voreaksanith/backend/Dockerfile \
+            student-voreaksanith
+          docker run --rm calendar-backend-ci \
+            python -c "from services.prompt_loader import PROMPT_DIR, load_prompt; \
+                       print('prompts at', PROMPT_DIR); \
+                       load_prompt('service/implementation/system_prompt.txt'); \
+                       print('prompts load correctly inside the image')"

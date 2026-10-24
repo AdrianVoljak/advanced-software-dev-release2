@@ -1,0 +1,172 @@
+.course-card {
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--ink);
+  background: var(--panel);
+  padding: 14px;
+}
+
+.course-card:hover { background: var(--panel-alt); }
+
+.course-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.course-code {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--red);
+}
+
+.course-card h3,
+.course-name {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.course-description {
+  font-size: 12.5px;
+  color: #555;
+  margin-bottom: 12px;
+}
+
+.availability {
+  display: inline-block;
+  padding: 3px 7px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: #E4F0E9;
+  color: var(--green);
+  white-space: nowrap;
+}
+
+.availability.not-available { background: #FDEBE7; color: var(--red); }
+
+.enrol-button {
+  padding: 8px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  border: 1px solid var(--red);
+  background: var(--red);
+  color: #fff;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.enrol-button:hover { background: var(--red-dark); }
+
+.enrol-button:disabled {
+  background: var(--panel);
+  border-color: var(--line);
+  color: var(--muted-light);
+  cursor: not-allowed;
+}
+
+.enrolment-list { overflow-x: auto; }
+
+.enrolment-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.enrolment-table th {
+  text-align: left;
+  padding: 11px 14px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.enrolment-table td {
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+}
+
+.enrolment-table tr:last-child td { border-bottom: none; }
+.enrolment-table tbody tr:hover { background: var(--panel-alt); }
+
+.status-badge {
+  display: inline-block;
+  padding: 3px 7px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: #E4F0E9;
+  color: var(--green);
+}
+
+.action-buttons { white-space: nowrap; }
+.action-buttons button + button { margin-left: 6px; }
+
+.edit-button,
+.delete-button {
+  padding: 6px 10px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--ink);
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.edit-button:hover { background: #F6F6F4; }
+
+.delete-button { border-color: var(--red); color: var(--red); }
+.delete-button:hover { background: #FDEBE7; }
+
+.enrolment-table select,
+.enrolment-table input {
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  font-family: inherit;
+  font-size: 12px;
+  background: #fff;
+}
+
+.enrolment-table select:focus,
+.enrolment-table input:focus {
+  outline: 2px solid var(--red);
+  outline-offset: -1px;
+}
+
+.ai-input-row { display: flex; gap: 8px; }
+.ai-input-row input { flex: 1; }
+
+.ai-response {
+  margin-top: 12px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #E4E4E4;
+  white-space: pre-wrap;
+}
+
+#rag-citations {
+  list-style: none;
+  padding-left: 0;
+}
+
+.ai-response:empty { display: none; }
+@media (max-width: 900px) {
+  .course-top { flex-direction: column; align-items: flex-start; gap: 4px; }
+  .enrolment-table th,
+  .enrolment-table td { padding: 8px 6px; }
+  .action-buttons button { display: block; width: 100%; }
+  .action-buttons button + button { margin-left: 0; margin-top: 4px; }
+}
