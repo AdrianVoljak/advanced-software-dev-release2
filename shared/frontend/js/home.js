@@ -1,4 +1,3 @@
-
 const SERVICES = [
     { key: "assessments", label: "Assessments", url: "/assessments-api/assignments" },
     { key: "multi-agent", label: "Multi-Agent", url: "/multi-agent-api/health" },

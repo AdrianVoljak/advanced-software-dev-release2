@@ -1,4 +1,3 @@
-
 """Release 2 Cloud Deployment Report Review.
 
 Validates supplied deployment check results and generates an

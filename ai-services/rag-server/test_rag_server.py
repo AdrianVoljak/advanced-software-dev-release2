@@ -1,4 +1,3 @@
-
 """Automated tests for the Assessment Tracker RAG service.
 
 Uses real retrieval/indexing logic with mocked assessment data and Ollama.

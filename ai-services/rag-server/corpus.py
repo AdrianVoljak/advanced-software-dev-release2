@@ -1,4 +1,3 @@
-
 """Build the Assessment Tracker RAG knowledge base.
 
 Sources:

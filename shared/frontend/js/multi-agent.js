@@ -1,4 +1,3 @@
-
 "use strict";
 
 // Same-origin API endpoint.

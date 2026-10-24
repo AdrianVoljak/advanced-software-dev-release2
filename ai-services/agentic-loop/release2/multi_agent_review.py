@@ -1,4 +1,3 @@
-
 """Release 2 Multi-Agent workflow review.
 
 Validates workflow coordination using saved history and audit events.

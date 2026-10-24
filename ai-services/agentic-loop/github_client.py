@@ -1,4 +1,3 @@
-
 """GitHub Actions client for Adrian's Release 2 CI reviews."""
 
 import io

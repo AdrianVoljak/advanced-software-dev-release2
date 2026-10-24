@@ -1,6 +1,10 @@
 name: Release 2 - Azure Deployment
 
 on:
+  push:
+    branches:
+      - main
+
   workflow_dispatch:
 
 permissions:
@@ -12,17 +16,128 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Stage 1: Run CI validation before deployment
+  ci-validation:
+    name: CI - Validate and Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    env:
+      AI_ENABLED: "false"
+      MCP_ENABLED: "false"
+      RAG_ENABLED: "false"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install backend dependencies
+        run: python -m pip install -r student-adrianvoljak/backend/requirements.txt
+
+      - name: Install database dependencies
+        run: python -m pip install -r student-adrianvoljak/database/requirements.txt
+
+      - name: Install pytest
+        run: python -m pip install pytest
+
+      - name: Initialise assessment database
+        run: python student-adrianvoljak/database/init_db.py
+
+      - name: Validate backend Python
+        run: python -m compileall -q student-adrianvoljak/backend
+
+      - name: Validate database Python
+        run: python -m compileall -q student-adrianvoljak/database
+
+      - name: Test Assessment Tracker endpoints
+        run: |
+          python -m pytest \
+            student-adrianvoljak/backend/tests/test_endpoints.py \
+            -v \
+            --junitxml=assessment-test-results.xml
+
+      - name: Upload endpoint test evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release2-endpoint-test-results
+          path: assessment-test-results.xml
+          if-no-files-found: warn
+
+      - name: Verify AI, MCP and RAG are disabled
+        working-directory: student-adrianvoljak/backend
+        run: |
+          python - <<'PY'
+          from unittest.mock import patch
+          from app import app
+
+          with (
+              patch("routes.ai_mode.database_api.get_assignments") as database,
+              patch("routes.ai_mode.ask_llm") as llm,
+              patch("routes.mcp_mode.get_upcoming_assessments") as mcp,
+              patch("routes.rag_mode.answer_assessment_question") as rag,
+          ):
+              with app.test_client() as client:
+                  responses = [
+                      client.post("/ai/prioritise", json={"student_id": 1}),
+                      client.get("/mcp/assessments/upcoming?student_id=1"),
+                      client.post(
+                          "/rag/assessments/answer",
+                          json={
+                              "student_id": 1,
+                              "query": "When is my report due?"
+                          },
+                      ),
+                  ]
+
+              for response in responses:
+                  assert response.status_code == 503, response.get_json()
+                  assert response.get_json()["status"] == "disabled"
+
+              database.assert_not_called()
+              llm.assert_not_called()
+              mcp.assert_not_called()
+              rag.assert_not_called()
+
+          print("AI, MCP and RAG routes are disabled without service calls.")
+          PY
+
+      - name: Validate Docker Compose configuration
+        run: docker compose config --quiet
+
+      - name: Build Assessment Tracker backend image
+        run: |
+          docker build \
+            -f student-adrianvoljak/backend/Dockerfile \
+            student-adrianvoljak
+
+      - name: Build Assessment Tracker database image
+        run: |
+          docker build \
+            -f student-adrianvoljak/database/Dockerfile \
+            student-adrianvoljak/database
+
+      - name: Build Assessment Tracker frontend image
+        run: |
+          docker build \
+            -f student-adrianvoljak/frontend/Dockerfile \
+            student-adrianvoljak/frontend
+
+  # Stage 2: Only deploy if CI passes
   build-deploy-test:
     name: Build, Deploy and Verify
+    needs: ci-validation
     runs-on: ubuntu-latest
     timeout-minutes: 45
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Verify Docker configuration
-        run: docker compose config --quiet
 
       - name: Azure login using OIDC
         uses: azure/login@v3

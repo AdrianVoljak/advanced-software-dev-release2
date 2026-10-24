@@ -1,4 +1,3 @@
-
 """Release 2 Testing and Security Review.
 
 Evaluates supplied pre-commit and post-commit testing evidence.

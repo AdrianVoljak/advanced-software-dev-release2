@@ -1,4 +1,3 @@
-
 """Reliable, evidence-based review engine for Release 2.
 
 Deterministic results are authoritative. Ollama provides optional
