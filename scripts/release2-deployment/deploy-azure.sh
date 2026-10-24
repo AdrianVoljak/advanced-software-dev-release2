@@ -83,7 +83,9 @@ deploy_service() {
 }
 
 # 1. Databases: retain existing Azure Files mounts.
-deploy_service user-database
+deploy_service user-database \
+    --set-env-vars \
+        "DATA_DIR=/tmp/user-data"
 
 deploy_service assessment-database \
     --set-env-vars DATABASE_PORT=5008
