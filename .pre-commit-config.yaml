@@ -5,18 +5,22 @@ repos:
       # SHARED RELEASE 2 - RUFF SECURITY
       - id: ruff-release2
         name: Ruff - Shared Release 2 Security
-        entry: ruff check
+        entry: ruff check ai-services/
         language: system
         types: [python]
         files: ^ai-services/
+        pass_filenames: false
+        always_run: true
 
       # INDIVIDUAL - RUFF SECURITY
       - id: ruff-adrian
         name: Ruff - Adrian Assessment Tracker
-        entry: ruff check --select S
+        entry: ruff check --select S student-adrianvoljak/
         language: system
         types: [python]
         files: ^student-adrianvoljak/
+        pass_filenames: false
+        always_run: true
 
       # SHARED + INDIVIDUAL - SECRET SCANNING
       - id: detect-secrets
